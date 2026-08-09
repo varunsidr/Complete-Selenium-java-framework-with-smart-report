@@ -1,0 +1,11 @@
+# Maven/Java build output
+target/
+
+# Test execution output
+test-output/
+reports/
+logs/
+
+# IDE / OS noise
+.DS_Store
+Thumbs.db
