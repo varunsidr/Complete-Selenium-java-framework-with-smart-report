@@ -18,13 +18,13 @@ public class NotesApiHealthCheckTest extends ApiBaseTest {
     @Test(description = "Verify Notes API health-check endpoint returns a successful response", groups = {"smoke", "api"})
     public void verifyNotesApiHealthCheck() throws IOException, InterruptedException {
         HttpResponse<String> response = ApiHelper.get(HEALTH_CHECK_ENDPOINT);
-        notesApiPage.verifyHealthCheckResponse(response, getTest());
+        notesApiPage.verifyHealthCheckResponse(response);
     }
 
     @Test(description = "Verify Notes API health-check unknown route returns not found", groups = {"smoke", "api", "negative"})
     public void verifyNotesApiUnknownHealthCheckRoute() throws IOException, InterruptedException {
         HttpResponse<String> response = ApiHelper.get(UNKNOWN_HEALTH_CHECK_ENDPOINT);
-        notesApiPage.verifyUnknownHealthCheckRouteResponse(response, getTest(), UNKNOWN_HEALTH_CHECK_ENDPOINT);
+        notesApiPage.verifyUnknownHealthCheckRouteResponse(response, UNKNOWN_HEALTH_CHECK_ENDPOINT);
     }
 
     @Test(description = "Verify Notes API HTTP health-check redirects to HTTPS", groups = {"smoke", "api", "protocol", "security"})
@@ -34,7 +34,6 @@ public class NotesApiHealthCheckTest extends ApiBaseTest {
         HttpResponse<String> response = ApiHelper.getWithoutRedirect(httpUrl);
         notesApiPage.verifyHttpRedirectsToHttps(
                 response,
-                getTest(),
                 "GET HTTP /health-check - redirect to HTTPS",
                 httpsUrl,
                 Map.of());

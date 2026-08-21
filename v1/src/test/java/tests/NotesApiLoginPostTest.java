@@ -1,14 +1,15 @@
 package tests;
 
-import Pages.NotesApiPage;
-import base.ApiBaseTest;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-import utils.ApiHelper;
-
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.Map;
+
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import Pages.NotesApiPage;
+import base.ApiBaseTest;
+import utils.ApiHelper;
 
 public class NotesApiLoginPostTest extends ApiBaseTest {
 
@@ -29,18 +30,18 @@ public class NotesApiLoginPostTest extends ApiBaseTest {
                     "email", email,
                     "password", PASSWORD);
             HttpResponse<String> registerResponse = ApiHelper.postForm(REGISTER_ENDPOINT, registrationPayload);
-            notesApiPage.verifyUserRegistrationResponse(registerResponse, getTest(), email, registrationPayload);
+            notesApiPage.verifyUserRegistrationResponse(registerResponse, email, registrationPayload);
 
             Map<String, String> loginPayload = Map.of(
                     "email", email,
                     "password", PASSWORD);
             HttpResponse<String> loginResponse = ApiHelper.postForm(LOGIN_ENDPOINT, loginPayload);
             token = ApiHelper.extractJsonString(loginResponse.body(), "token");
-            notesApiPage.verifySuccessfulLoginResponse(loginResponse, getTest(), email, loginPayload);
+            notesApiPage.verifySuccessfulLoginResponse(loginResponse, email, loginPayload);
         } finally {
             if (!token.isEmpty()) {
                 HttpResponse<String> cleanupResponse = ApiHelper.deleteWithToken(DELETE_ACCOUNT_ENDPOINT, token);
-                notesApiPage.verifyAccountCleanupResponse(cleanupResponse, getTest());
+                                notesApiPage.verifyAccountCleanupResponse(cleanupResponse);
             }
         }
     }
@@ -51,7 +52,7 @@ public class NotesApiLoginPostTest extends ApiBaseTest {
                 "email", "invalid.codex@example.com",
                 "password", "WrongPassword123");
         HttpResponse<String> response = ApiHelper.postForm(LOGIN_ENDPOINT, loginPayload);
-        notesApiPage.verifyInvalidLoginResponse(response, getTest(), loginPayload);
+        notesApiPage.verifyInvalidLoginResponse(response, loginPayload);
     }
 
     @Test(description = "Verify Notes API HTTP login redirects to HTTPS before processing credentials",
@@ -66,7 +67,6 @@ public class NotesApiLoginPostTest extends ApiBaseTest {
         HttpResponse<String> response = ApiHelper.postFormWithoutRedirect(httpUrl, loginPayload);
         notesApiPage.verifyHttpRedirectsToHttps(
                 response,
-                getTest(),
                 "POST HTTP /users/login - redirect to HTTPS",
                 httpsUrl,
                 loginPayload);
@@ -81,7 +81,6 @@ public class NotesApiLoginPostTest extends ApiBaseTest {
         HttpResponse<String> response = ApiHelper.deleteWithTokenWithoutRedirect(httpUrl, "dummy-token");
         notesApiPage.verifyHttpRedirectsToHttps(
                 response,
-                getTest(),
                 "DELETE HTTP /users/delete-account - redirect to HTTPS",
                 httpsUrl,
                 Map.of());
@@ -93,7 +92,7 @@ public class NotesApiLoginPostTest extends ApiBaseTest {
     public void verifyLoginBadRequestResponses(String scenarioName, Map<String, String> requestBody, String expectedMessage)
             throws IOException, InterruptedException {
         HttpResponse<String> response = ApiHelper.postForm(LOGIN_ENDPOINT, requestBody);
-        notesApiPage.verifyBadRequestLoginResponse(response, getTest(), expectedMessage, requestBody);
+        notesApiPage.verifyBadRequestLoginResponse(response, expectedMessage, requestBody);
     }
 
     @DataProvider(name = "badLoginPayloads")

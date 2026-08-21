@@ -8,12 +8,11 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.Test;
+import utils.BrokenLinkChecker;
 import utils.Reporter;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -72,6 +71,8 @@ public class BrokenLinkCheckerTest extends BaseTest {
         logToReport(Status.INFO, "Total anchor tags found: " + links.size());
 
         URI baseUri = URI.create(baseUrl);
+        int connectTimeoutMillis = Integer.parseInt(prop.getProperty("broken.link.connect.timeout.millis", "3000"));
+        int readTimeoutMillis = Integer.parseInt(prop.getProperty("broken.link.read.timeout.millis", "3000"));
         List<LinkCandidate> candidates = new ArrayList<>();
         for (WebElement link : links) {
             try {
@@ -98,39 +99,7 @@ public class BrokenLinkCheckerTest extends BaseTest {
             int linkNumber = candidate.linkNumber;
             tasks.add(() -> {
                 System.out.println("[BrokenLinkCheckerTest] Checking link " + linkNumber + " of " + candidates.size() + ": " + normalized);
-                try {
-                    URI linkUri = URI.create(normalized);
-                    if (!linkUri.isAbsolute()) {
-                        linkUri = baseUri.resolve(linkUri);
-                    }
-                    URL url = linkUri.toURL();
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("HEAD");
-                    connection.setInstanceFollowRedirects(true);
-                    connection.setConnectTimeout(700);
-                    connection.setReadTimeout(700);
-                    connection.connect();
-                    int statusCode = connection.getResponseCode();
-                    String statusText = "HTTP " + statusCode;
-
-                    if (statusCode == HttpURLConnection.HTTP_BAD_METHOD || statusCode == HttpURLConnection.HTTP_NOT_IMPLEMENTED) {
-                        connection = (HttpURLConnection) url.openConnection();
-                        connection.setRequestMethod("GET");
-                        connection.setInstanceFollowRedirects(true);
-                        connection.setConnectTimeout(700);
-                        connection.setReadTimeout(700);
-                        connection.connect();
-                        statusCode = connection.getResponseCode();
-                        statusText = "HTTP " + statusCode + " (GET fallback)";
-                    }
-
-                    if (statusCode >= 400) {
-                        return new Reporter.BrokenLinkResult(url.toString(), statusText, false, "Link responded with an error code");
-                    }
-                    return new Reporter.BrokenLinkResult(url.toString(), statusText, true, "Link responded successfully");
-                } catch (IOException e) {
-                    return new Reporter.BrokenLinkResult(normalized, "ERROR", false, e.getMessage());
-                }
+                return BrokenLinkChecker.check(normalized, baseUri, connectTimeoutMillis, readTimeoutMillis);
             });
         }
 

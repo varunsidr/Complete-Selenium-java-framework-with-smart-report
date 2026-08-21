@@ -1,6 +1,6 @@
 # Complete Selenium Java Framework With Smart Report
 
-A production-shaped automation framework built with Selenium, Java, and TestNG using the Page Object Model pattern. It combines UI testing, API checks, smart HTML reporting, and reusable utilities in one maintainable structure.
+A production-shaped automation framework built with Selenium, Java, and TestNG using the Page Object Model pattern. It combines UI testing, API checks, and reusable utilities with separate reporting paths for UI Extent output and API Allure output.
 
 Built to be discussed in interviews: the architecture mirrors a real enterprise framework and each layer has a clear responsibility.
 
@@ -14,7 +14,7 @@ Built to be discussed in interviews: the architecture mirrors a real enterprise 
 | Automation | Selenium 4.45 | Stable browser automation with broad compatibility |
 | Test Runner | TestNG 7.10 | Suites, data providers, grouping, parallel execution |
 | Build | Maven | Dependency management and CI-friendly execution |
-| Reporting | ExtentReports 5 | Rich HTML reporting with test-level visibility |
+| Reporting | ExtentReports 5 + Allure | UI Extent HTML plus API Allure attachments and hierarchy |
 | Logging | Log4j2 | Structured logs for debugging and auditability |
 | Test Data | Apache POI | Data-driven testing through Excel input |
 
@@ -79,7 +79,17 @@ mvn test
 
 ## Reporting And Outputs
 
-- Extent and framework reports are generated in the reports folder.
+- UI and broken-link Extent reports are generated in the reports folder.
+- API tests write sanitized request, response, headers, timings, and assertion steps to `target/allure-results`.
+- API Allure results are organized with a cleaner hierarchy so the report reads as API -> Notes API -> endpoint group -> scenario.
+- Generate the API report after an API test run:
+
+```bash
+cd v1
+mvnw.cmd allure:report
+```
+
+The rendered report is available at `target/site/allure-maven-plugin/index.html`.
 - TestNG default outputs are generated in test-output.
 - Surefire execution artifacts are available under target/surefire-reports.
 
@@ -128,3 +138,9 @@ Utility support for Excel-driven inputs makes it easy to scale coverage by addin
 - Expand cross-browser matrix execution.
 - Introduce richer trend reporting and historical dashboards.
 - Increase negative and boundary API/UI datasets.
+
+---
+
+## Change Log
+
+See [change log.md](change%20log.md) for the latest reporting updates and API Allure migration notes.

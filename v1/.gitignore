@@ -5,6 +5,11 @@ target/
 test-output/
 reports/
 logs/
+.allure/
+allure-report/
+
+# Local Allure runtime data
+target/allure-results/
 
 # IDE / OS noise
 .DS_Store

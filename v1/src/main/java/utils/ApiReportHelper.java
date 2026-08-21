@@ -1,11 +1,5 @@
 package utils;
 
-import com.aventstack.extentreports.ExtentTest;
-import com.aventstack.extentreports.Status;
-import com.aventstack.extentreports.markuputils.CodeLanguage;
-import com.aventstack.extentreports.markuputils.ExtentColor;
-import com.aventstack.extentreports.markuputils.MarkupHelper;
-
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -16,6 +10,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import io.qameta.allure.Allure;
 
 public final class ApiReportHelper {
 
@@ -37,56 +33,48 @@ public final class ApiReportHelper {
     }
 
     public static void logTransaction(
-            ExtentTest test,
             String stepName,
             HttpResponse<String> response,
             Map<String, String> requestBody) {
-        if (test == null || response == null) {
+        if (response == null) {
             return;
         }
 
         HttpRequest request = response.request();
         long responseTime = ApiHelper.getResponseTimeMillis(response);
-        ExtentTest node = test.createNode(stepName);
         String headline = request.method() + " " + request.uri()
                 + " | HTTP " + response.statusCode()
                 + " | " + formatDuration(responseTime);
 
-        node.info(MarkupHelper.createLabel(headline, statusColor(response.statusCode())));
-        node.info(MarkupHelper.createTable(summaryRows(request, response, responseTime)));
+        Allure.step(stepName + " | " + headline);
+        Allure.addAttachment("API transaction", "text/plain", transactionSummary(request, response, responseTime), ".txt");
 
         if (!request.headers().map().isEmpty()) {
-            node.info("Request Headers");
-            node.info(MarkupHelper.createTable(headerRows(request.headers())));
+            Allure.addAttachment("Request headers", "text/plain", formatHeaders(request.headers()), ".txt");
         }
 
         if (requestBody != null && !requestBody.isEmpty()) {
-            node.info("Request Body");
-            node.info(MarkupHelper.createCodeBlock(formatMapAsJson(requestBody), CodeLanguage.JSON));
+            Allure.addAttachment("Request body", "application/json", formatMapAsJson(requestBody), ".json");
         }
 
         if (!response.headers().map().isEmpty()) {
-            node.info("Response Headers");
-            node.info(MarkupHelper.createTable(headerRows(response.headers())));
+            Allure.addAttachment("Response headers", "text/plain", formatHeaders(response.headers()), ".txt");
         }
 
         String body = response.body() == null ? "" : response.body().trim();
         if (!body.isEmpty()) {
-            node.info("Response Body");
             String safeBody = maskSensitiveJson(body);
             if (looksLikeJson(safeBody)) {
-                node.info(MarkupHelper.createCodeBlock(prettyJson(safeBody), CodeLanguage.JSON));
+                Allure.addAttachment("Response body", "application/json", prettyJson(safeBody), ".json");
             } else {
-                node.info("<pre>" + escapeHtml(truncate(safeBody, MAX_REPORT_TEXT_PAYLOAD_CHARS)) + "</pre>");
+                Allure.addAttachment("Response body", "text/plain",
+                        truncate(safeBody, MAX_REPORT_TEXT_PAYLOAD_CHARS), ".txt");
             }
         }
     }
 
-    public static void logAssertion(ExtentTest test, boolean passed, String message) {
-        if (test == null) {
-            return;
-        }
-        test.log(passed ? Status.PASS : Status.FAIL, message);
+    public static void logAssertion(boolean passed, String message) {
+        Allure.step(message + (passed ? " | passed" : " | failed"));
     }
 
     public static String sanitizePayload(String payload) {
@@ -94,29 +82,23 @@ public final class ApiReportHelper {
         return truncate(safePayload.replaceAll("\\s+", " "), MAX_CONSOLE_PAYLOAD_CHARS);
     }
 
-    private static String[][] summaryRows(HttpRequest request, HttpResponse<String> response, long responseTime) {
-        return new String[][] {
-                { "Field", "Value" },
-                { "Method", request.method() },
-                { "URL", request.uri().toString() },
-                { "HTTP Status", String.valueOf(response.statusCode()) },
-                { "Response Time", formatDuration(responseTime) },
-                { "Content Type", ApiHelper.getContentType(response) }
-        };
+        private static String transactionSummary(HttpRequest request, HttpResponse<String> response, long responseTime) {
+        return "Method: " + request.method() + System.lineSeparator()
+            + "URL: " + request.uri() + System.lineSeparator()
+            + "HTTP Status: " + response.statusCode() + System.lineSeparator()
+            + "Response Time: " + formatDuration(responseTime) + System.lineSeparator()
+            + "Content Type: " + ApiHelper.getContentType(response);
     }
 
-    private static String[][] headerRows(HttpHeaders headers) {
-        List<String[]> rows = new ArrayList<>();
-        rows.add(new String[] { "Header", "Value" });
+        private static String formatHeaders(HttpHeaders headers) {
+        List<String> rows = new ArrayList<>();
         headers.map()
                 .entrySet()
                 .stream()
                 .sorted(Comparator.comparing(entry -> entry.getKey().toLowerCase(Locale.ROOT)))
-                .forEach(entry -> rows.add(new String[] {
-                        entry.getKey(),
-                        isSensitiveKey(entry.getKey()) ? MASK : String.join(", ", entry.getValue())
-                }));
-        return rows.toArray(String[][]::new);
+            .forEach(entry -> rows.add(entry.getKey() + ": "
+                + (isSensitiveKey(entry.getKey()) ? MASK : String.join(", ", entry.getValue()))));
+        return String.join(System.lineSeparator(), rows);
     }
 
     private static String formatMapAsJson(Map<String, String> values) {
@@ -230,22 +212,6 @@ public final class ApiReportHelper {
         builder.append("  ".repeat(Math.max(0, indent)));
     }
 
-    private static ExtentColor statusColor(int statusCode) {
-        if (statusCode >= 200 && statusCode < 300) {
-            return ExtentColor.GREEN;
-        }
-        if (statusCode >= 300 && statusCode < 400) {
-            return ExtentColor.ORANGE;
-        }
-        if (statusCode >= 400 && statusCode < 500) {
-            return ExtentColor.ORANGE;
-        }
-        if (statusCode >= 500) {
-            return ExtentColor.RED;
-        }
-        return ExtentColor.GREY;
-    }
-
     private static String formatDuration(long millis) {
         return millis < 0 ? "not captured" : millis + " ms";
     }
@@ -264,17 +230,6 @@ public final class ApiReportHelper {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
-    }
-
-    private static String escapeHtml(String value) {
-        if (value == null) {
-            return "";
-        }
-        return value.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
     }
 
     private static String truncate(String value, int maxChars) {
