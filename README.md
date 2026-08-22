@@ -2,6 +2,9 @@
 
 A production-shaped automation framework built with Selenium, Java, and TestNG using the Page Object Model pattern. It combines UI testing, API checks, and reusable utilities with separate reporting paths for UI Extent output and API Allure output.
 
+[![CI](https://github.com/varunsidr/Complete-Selenium-java-framework-with-smart-report/actions/workflows/ci.yml/badge.svg)](https://github.com/varunsidr/Complete-Selenium-java-framework-with-smart-report/actions/workflows/ci.yml)
+[Live report](https://varunsidr.github.io/Complete-Selenium-java-framework-with-smart-report/)
+
 Recent updates added browser-matrix CI execution, runtime browser overrides for local and pipeline runs, and class-level parallel execution for faster suite feedback.
 
 Dockerized browser execution is now available through Selenium standalone containers, so the suite can run against Chrome or Firefox without local browser installs.
@@ -119,6 +122,29 @@ The suite validates both browser workflows and API behavior in one framework, wh
 
 ### 5) Data-Driven Expansion
 Utility support for Excel-driven inputs makes it easy to scale coverage by adding data sets rather than duplicating test logic.
+
+## Why These Patterns Exist
+
+### ThreadLocal Driver And Test Context
+`ThreadLocal<WebDriver>` keeps browser sessions isolated per test thread so class-level parallel execution does not cross-contaminate state. The same pattern is used for report context through the active test handle, which keeps screenshots and steps attached to the correct test.
+
+### Explicit Waits
+The framework uses explicit waits before hover, click, and input actions because the target UI is animated and hover-driven. That makes the suite fail on real readiness instead of guessing with fixed sleeps.
+
+### Composition Over Inheritance
+Page objects and helpers own the behavior, while tests stay focused on the story they are validating. That keeps UI changes localized and avoids an inheritance-heavy test hierarchy.
+
+### Failure Propagation
+Helpers log and capture evidence first, then rethrow. That gives the report a failure snapshot while still letting TestNG mark the test as failed at the correct step.
+
+### Parallel-Safe Execution
+The suite is designed so each class can run independently, which is why the shared base layer and helpers avoid shared mutable browser state.
+
+## Proof Of Work
+
+- CI badge: [GitHub Actions](https://github.com/varunsidr/Complete-Selenium-java-framework-with-smart-report/actions/workflows/ci.yml)
+- Live report: [GitHub Pages report hub](https://varunsidr.github.io/Complete-Selenium-java-framework-with-smart-report/)
+- Jenkins pipeline: [v1/Jenkinsfile](v1/Jenkinsfile)
 
 ---
 

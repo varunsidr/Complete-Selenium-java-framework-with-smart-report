@@ -1,0 +1,109 @@
+name: Publish Reports to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish-report:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Make Maven wrapper executable
+        run: chmod +x mvnw
+        working-directory: v1
+
+      - name: Start Chrome container
+        run: docker compose -f docker-compose.selenium.yml up -d selenium-chrome
+        working-directory: v1
+
+      - name: Run suite against Dockerized Chrome
+        run: ./mvnw -B -ntp test -Dremote=true -Dbrowser=chrome -Dheadless=false -Dremote.chrome.url=http://localhost:4444
+        working-directory: v1
+
+      - name: Generate Allure report
+        run: ./mvnw -B -ntp allure:report
+        working-directory: v1
+
+      - name: Prepare Pages content
+        run: |
+          set -e
+          mkdir -p public/allure
+          touch public/.nojekyll
+          latest_extent=$(ls -t reports/Hybrid_Framework_Report_*.html | head -n 1)
+          cp "$latest_extent" public/extent-report.html
+          cp -R target/site/allure-maven-plugin/. public/allure/
+          cat > public/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Smart Report Hub</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
+              .shell { max-width: 960px; margin: 0 auto; padding: 48px 24px; }
+              .card { background: #111827; border: 1px solid #334155; border-radius: 16px; padding: 24px; margin: 16px 0; }
+              a { color: #60a5fa; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+              h1 { margin-top: 0; }
+            </style>
+          </head>
+          <body>
+            <div class="shell">
+              <h1>Smart Report Hub</h1>
+              <p>Latest published reports from the Selenium Java framework.</p>
+              <div class="card">
+                <h2>Extent Report</h2>
+                <p><a href="extent-report.html">Open the latest Extent HTML report</a></p>
+              </div>
+              <div class="card">
+                <h2>Allure Report</h2>
+                <p><a href="allure/index.html">Open the generated Allure report</a></p>
+              </div>
+            </div>
+          </body>
+          </html>
+          EOF
+        working-directory: v1
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: v1/public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Stop Chrome container
+        if: always()
+        run: docker compose -f docker-compose.selenium.yml down
+        working-directory: v1

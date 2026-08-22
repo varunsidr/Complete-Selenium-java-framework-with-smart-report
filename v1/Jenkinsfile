@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Start Browser Container') {
+            steps {
+                dir('v1') {
+                    sh 'docker compose -f docker-compose.selenium.yml up -d selenium-chrome'
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                dir('v1') {
+                    sh './mvnw -B -ntp test -Dremote=true -Dbrowser=chrome -Dheadless=false -Dremote.chrome.url=http://localhost:4444'
+                }
+            }
+        }
+
+        stage('Generate Allure Report') {
+            steps {
+                dir('v1') {
+                    sh './mvnw -B -ntp allure:report'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            dir('v1') {
+                sh 'docker compose -f docker-compose.selenium.yml down || true'
+                archiveArtifacts artifacts: 'reports/**,target/surefire-reports/**,test-output/**,target/site/allure-maven-plugin/**', allowEmptyArchive: true
+            }
+        }
+    }
+}

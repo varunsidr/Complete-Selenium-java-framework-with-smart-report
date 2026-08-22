@@ -11,6 +11,9 @@ allure-report/
 # Local Allure runtime data
 target/allure-results/
 
+# Generated test run logs
+*.log
+
 # IDE / OS noise
 .DS_Store
 Thumbs.db

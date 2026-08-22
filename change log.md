@@ -1,5 +1,12 @@
 # Change Log
 
+## 2026-08-23 Delivery and docs updates
+
+- Added a working CI badge and live GitHub Pages report link to the README.
+- Added a GitHub Pages workflow to publish the latest Extent and Allure reports.
+- Added a Jenkinsfile so the same browser flow can be run and archived from Jenkins.
+- Expanded the README with the reasoning behind ThreadLocal, explicit waits, composition, and failure propagation.
+
 ## 2026-08-23 Fire Insurance fix
 
 - Stabilized the Fire Insurance hover flow by replacing scroll-plus-JS click with a single hover-and-click action.
