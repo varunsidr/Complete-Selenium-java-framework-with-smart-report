@@ -176,9 +176,11 @@ Recent UI fix: the Fire Insurance menu path now uses a stable hover-and-click he
 
 ## CI
 
-The repository includes a GitHub Actions workflow in [v1/.github/workflows/ci.yml](v1/.github/workflows/ci.yml) that runs the suite in a browser matrix across Chrome and Firefox with headless execution.
+The repository includes a GitHub Actions workflow in [.github/workflows/ci.yml](.github/workflows/ci.yml) that runs the suite in a browser matrix across Chrome and Firefox with headless execution.
 
 The workflow passes `browser` and `headless` as Maven system properties so the same codebase can run locally or in CI without editing `config.properties`.
+
+There is also a GitHub Pages workflow in [.github/workflows/pages.yml](.github/workflows/pages.yml) that publishes the latest Extent and Allure reports as a live report hub.
 
 ## Docker
 

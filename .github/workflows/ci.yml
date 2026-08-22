@@ -37,9 +37,11 @@ jobs:
 
       - name: Compile
         run: ./mvnw -B -ntp -DskipTests compile
+        working-directory: v1
 
       - name: Run TestNG suite on ${{ matrix.browser }}
         run: ./mvnw -B -ntp test -Dgroups=${{ matrix.test_groups }} -Dbrowser=${{ matrix.browser }} -Dheadless=true
+        working-directory: v1
 
       - name: Upload test artifacts
         if: always()
@@ -48,7 +50,7 @@ jobs:
           name: test-artifacts-${{ matrix.browser }}
           if-no-files-found: ignore
           path: |
-            target/surefire-reports/**
-            test-output/**
-            reports/**
-            logs/**
+            v1/target/surefire-reports/**
+            v1/test-output/**
+            v1/reports/**
+            v1/logs/**

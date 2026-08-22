@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-08-23 Workflow relocation
+
+- Moved the GitHub Actions workflows to the repository root so GitHub can detect them.
+- Updated the README links to point at the root-level workflow files.
+
 ## 2026-08-23 Delivery and docs updates
 
 - Added a working CI badge and live GitHub Pages report link to the README.
