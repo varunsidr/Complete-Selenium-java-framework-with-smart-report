@@ -1,4 +1,4 @@
-name: Java CI
+name: Java CI Matrix
 
 on:
   push:
@@ -10,6 +10,16 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox]
+        include:
+          - browser: chrome
+            test_groups: smoke,api
+          - browser: firefox
+            test_groups: smoke
 
     steps:
       - name: Checkout
@@ -28,14 +38,14 @@ jobs:
       - name: Compile
         run: ./mvnw -B -ntp -DskipTests compile
 
-      - name: Run API TestNG suite
-        run: ./mvnw -B -ntp test -Dgroups=api
+      - name: Run TestNG suite on ${{ matrix.browser }}
+        run: ./mvnw -B -ntp test -Dgroups=${{ matrix.test_groups }} -Dbrowser=${{ matrix.browser }} -Dheadless=true
 
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-artifacts
+          name: test-artifacts-${{ matrix.browser }}
           if-no-files-found: ignore
           path: |
             target/surefire-reports/**

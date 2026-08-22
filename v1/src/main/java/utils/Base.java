@@ -20,6 +20,8 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.chromium.ChromiumDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Interactive;
 
 public class Base {
@@ -106,9 +108,9 @@ public class Base {
     public static void openBrowser(boolean navigateDefaultUrl) throws IOException {
         loadConfig();
 
-        String browser = prop.getProperty("browser", "chrome");
-        boolean headless = Boolean.parseBoolean(prop.getProperty("headless", "false"));
-        String url = prop.getProperty("url");
+        String browser = resolveSetting("browser", "chrome");
+        boolean headless = Boolean.parseBoolean(resolveSetting("headless", "false"));
+        String url = resolveSetting("url", prop.getProperty("url"));
         int pageLoadTimeout = Integer.parseInt(prop.getProperty("pageload.timeout", "30"));
         WAIT_TIMEOUT = Integer.parseInt(prop.getProperty("implicit.wait", "10"));
 
@@ -147,6 +149,13 @@ public class Base {
                 opt.addArguments("--window-size=1920,1080");
             }
             rawDriver = new EdgeDriver(opt);
+        } else if (browser.equalsIgnoreCase("firefox")) {
+            FirefoxOptions opt = new FirefoxOptions();
+            opt.addArguments("-lang=en-IN");
+            if (headless) {
+                opt.addArguments("-headless");
+            }
+            rawDriver = new FirefoxDriver(opt);
         } else {
             throw new IllegalArgumentException("Unsupported browser: " + browser);
         }
@@ -194,6 +203,22 @@ public class Base {
         return Map.of(
                 "profile.default_content_setting_values.popups", 2,
                 "profile.default_content_setting_values.notifications", 2);
+    }
+
+    private static String resolveSetting(String key, String defaultValue) {
+        String systemValue = System.getProperty(key);
+        if (systemValue != null && !systemValue.isBlank()) {
+            return systemValue.trim();
+        }
+
+        if (prop != null) {
+            String configuredValue = prop.getProperty(key);
+            if (configuredValue != null && !configuredValue.isBlank()) {
+                return configuredValue.trim();
+            }
+        }
+
+        return defaultValue;
     }
 
     private static void configureAdBlocking(WebDriver webDriver) {

@@ -2,6 +2,8 @@
 
 A production-shaped automation framework built with Selenium, Java, and TestNG using the Page Object Model pattern. It combines UI testing, API checks, and reusable utilities with separate reporting paths for UI Extent output and API Allure output.
 
+Recent updates added browser-matrix CI execution, runtime browser overrides for local and pipeline runs, and class-level parallel execution for faster suite feedback.
+
 Built to be discussed in interviews: the architecture mirrors a real enterprise framework and each layer has a clear responsibility.
 
 ---
@@ -82,6 +84,8 @@ mvn test
 - UI and broken-link Extent reports are generated in the reports folder.
 - API tests write sanitized request, response, headers, timings, and assertion steps to `target/allure-results`.
 - API Allure results are organized with a cleaner hierarchy so the report reads as API -> Notes API -> endpoint group -> scenario.
+- The shared WebDriver layer supports Chrome, Edge, and Firefox, with browser and headless settings overridable from the command line for CI runs.
+- TestNG executes classes in parallel so independent smoke checks can run faster without changing test code.
 - Generate the API report after an API test run:
 
 ```bash
@@ -135,9 +139,14 @@ Utility support for Excel-driven inputs makes it easy to scale coverage by addin
 ## Roadmap
 
 - Add CI workflow enhancements for scheduled and pull-request runs.
-- Expand cross-browser matrix execution.
 - Introduce richer trend reporting and historical dashboards.
 - Increase negative and boundary API/UI datasets.
+
+## CI
+
+The repository includes a GitHub Actions workflow in [v1/.github/workflows/ci.yml](v1/.github/workflows/ci.yml) that runs the suite in a browser matrix across Chrome and Firefox with headless execution.
+
+The workflow passes `browser` and `headless` as Maven system properties so the same codebase can run locally or in CI without editing `config.properties`.
 
 ---
 
