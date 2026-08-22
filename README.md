@@ -4,6 +4,10 @@ A production-shaped automation framework built with Selenium, Java, and TestNG u
 
 Recent updates added browser-matrix CI execution, runtime browser overrides for local and pipeline runs, and class-level parallel execution for faster suite feedback.
 
+Dockerized browser execution is now available through Selenium standalone containers, so the suite can run against Chrome or Firefox without local browser installs.
+
+The Fire Insurance flow was also stabilized by replacing the hover plus scroll sequence with a direct hover-and-click action on the submenu item, which removed the intermittent timeout on that test.
+
 Built to be discussed in interviews: the architecture mirrors a real enterprise framework and each layer has a clear responsibility.
 
 ---
@@ -125,6 +129,8 @@ Utility support for Excel-driven inputs makes it easy to scale coverage by addin
 - Broken link detection.
 - API checks for Notes authentication and health scenarios.
 
+Recent UI fix: the Fire Insurance menu path now uses a stable hover-and-click helper so the submenu does not collapse before selection.
+
 ---
 
 ## Why This Framework Shape Works
@@ -147,6 +153,32 @@ Utility support for Excel-driven inputs makes it easy to scale coverage by addin
 The repository includes a GitHub Actions workflow in [v1/.github/workflows/ci.yml](v1/.github/workflows/ci.yml) that runs the suite in a browser matrix across Chrome and Firefox with headless execution.
 
 The workflow passes `browser` and `headless` as Maven system properties so the same codebase can run locally or in CI without editing `config.properties`.
+
+## Docker
+
+Start the browser containers from the `v1` folder:
+
+```bash
+docker compose -f docker-compose.selenium.yml up -d
+```
+
+Run the suite against the Chrome container:
+
+```bash
+mvnw.cmd clean test -Dremote=true -Dbrowser=chrome -Dheadless=false -Dremote.chrome.url=http://localhost:4444
+```
+
+Run the suite against the Firefox container:
+
+```bash
+mvnw.cmd clean test -Dremote=true -Dbrowser=firefox -Dheadless=false -Dremote.firefox.url=http://localhost:4445
+```
+
+Stop the containers when you are done:
+
+```bash
+docker compose -f docker-compose.selenium.yml down
+```
 
 ---
 

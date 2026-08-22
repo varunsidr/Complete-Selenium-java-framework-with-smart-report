@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Interactive;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 public class Base {
 
@@ -110,55 +112,14 @@ public class Base {
 
         String browser = resolveSetting("browser", "chrome");
         boolean headless = Boolean.parseBoolean(resolveSetting("headless", "false"));
+        boolean remote = Boolean.parseBoolean(resolveSetting("remote", "false"));
         String url = resolveSetting("url", prop.getProperty("url"));
         int pageLoadTimeout = Integer.parseInt(prop.getProperty("pageload.timeout", "30"));
         WAIT_TIMEOUT = Integer.parseInt(prop.getProperty("implicit.wait", "10"));
 
-        WebDriver rawDriver;
-        if (browser.equalsIgnoreCase("chrome")) {
-            ChromeOptions opt = new ChromeOptions();
-            opt.addArguments("--disable-notifications");
-            opt.addArguments("--disable-extensions");
-            opt.addArguments("--disable-infobars");
-            opt.addArguments("--remote-allow-origins=*");
-            opt.addArguments("--lang=en-IN");
-            opt.addArguments("--disable-gpu");
-            opt.addArguments("--disable-dev-shm-usage");
-            opt.addArguments("--no-sandbox");
-            opt.setExperimentalOption("prefs", blockedContentPreferences());
-            opt.setPageLoadStrategy(PageLoadStrategy.EAGER);
-            if (headless) {
-                opt.addArguments("--headless=new");
-                opt.addArguments("--window-size=1920,1080");
-            }
-            rawDriver = new ChromeDriver(opt);
-        } else if (browser.equalsIgnoreCase("edge")) {
-            EdgeOptions opt = new EdgeOptions();
-            opt.addArguments("--disable-notifications");
-            opt.addArguments("--disable-extensions");
-            opt.addArguments("--disable-infobars");
-            opt.addArguments("--remote-allow-origins=*");
-            opt.addArguments("--lang=en-IN");
-            opt.addArguments("--disable-gpu");
-            opt.addArguments("--disable-dev-shm-usage");
-            opt.addArguments("--no-sandbox");
-            opt.setExperimentalOption("prefs", blockedContentPreferences());
-            opt.setPageLoadStrategy(PageLoadStrategy.EAGER);
-            if (headless) {
-                opt.addArguments("--headless=new");
-                opt.addArguments("--window-size=1920,1080");
-            }
-            rawDriver = new EdgeDriver(opt);
-        } else if (browser.equalsIgnoreCase("firefox")) {
-            FirefoxOptions opt = new FirefoxOptions();
-            opt.addArguments("-lang=en-IN");
-            if (headless) {
-                opt.addArguments("-headless");
-            }
-            rawDriver = new FirefoxDriver(opt);
-        } else {
-            throw new IllegalArgumentException("Unsupported browser: " + browser);
-        }
+        WebDriver rawDriver = remote
+                ? createRemoteDriver(browser, headless)
+                : createLocalDriver(browser, headless);
 
         DRIVER_THREAD_LOCAL.set(rawDriver);
         rawDriver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(pageLoadTimeout));
@@ -203,6 +164,105 @@ public class Base {
         return Map.of(
                 "profile.default_content_setting_values.popups", 2,
                 "profile.default_content_setting_values.notifications", 2);
+    }
+
+    private static WebDriver createLocalDriver(String browser, boolean headless) {
+        if (browser.equalsIgnoreCase("chrome")) {
+            ChromeOptions opt = new ChromeOptions();
+            configureChromiumOptions(opt, headless);
+            return new ChromeDriver(opt);
+        }
+        if (browser.equalsIgnoreCase("edge")) {
+            EdgeOptions opt = new EdgeOptions();
+            configureChromiumOptions(opt, headless);
+            return new EdgeDriver(opt);
+        }
+        if (browser.equalsIgnoreCase("firefox")) {
+            FirefoxOptions opt = new FirefoxOptions();
+            opt.addArguments("-lang=en-IN");
+            if (headless) {
+                opt.addArguments("-headless");
+            }
+            return new FirefoxDriver(opt);
+        }
+        throw new IllegalArgumentException("Unsupported browser: " + browser);
+    }
+
+    private static WebDriver createRemoteDriver(String browser, boolean headless) throws IOException {
+        String remoteUrl = resolveRemoteUrl(browser);
+
+        if (browser.equalsIgnoreCase("chrome")) {
+            ChromeOptions opt = new ChromeOptions();
+            configureChromiumOptions(opt, headless);
+            return new RemoteWebDriver(new URL(remoteUrl), opt);
+        }
+        if (browser.equalsIgnoreCase("edge")) {
+            EdgeOptions opt = new EdgeOptions();
+            configureChromiumOptions(opt, headless);
+            return new RemoteWebDriver(new URL(remoteUrl), opt);
+        }
+        if (browser.equalsIgnoreCase("firefox")) {
+            FirefoxOptions opt = new FirefoxOptions();
+            opt.addArguments("-lang=en-IN");
+            if (headless) {
+                opt.addArguments("-headless");
+            }
+            return new RemoteWebDriver(new URL(remoteUrl), opt);
+        }
+        throw new IllegalArgumentException("Unsupported browser: " + browser);
+    }
+
+    private static void configureChromiumOptions(ChromeOptions options, boolean headless) {
+        options.addArguments("--disable-notifications");
+        options.addArguments("--disable-extensions");
+        options.addArguments("--disable-infobars");
+        options.addArguments("--remote-allow-origins=*");
+        options.addArguments("--lang=en-IN");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--no-sandbox");
+        options.setExperimentalOption("prefs", blockedContentPreferences());
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
+        if (headless) {
+            options.addArguments("--headless=new");
+            options.addArguments("--window-size=1920,1080");
+        }
+    }
+
+    private static void configureChromiumOptions(EdgeOptions options, boolean headless) {
+        options.addArguments("--disable-notifications");
+        options.addArguments("--disable-extensions");
+        options.addArguments("--disable-infobars");
+        options.addArguments("--remote-allow-origins=*");
+        options.addArguments("--lang=en-IN");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--no-sandbox");
+        options.setExperimentalOption("prefs", blockedContentPreferences());
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
+        if (headless) {
+            options.addArguments("--headless=new");
+            options.addArguments("--window-size=1920,1080");
+        }
+    }
+
+    private static String resolveRemoteUrl(String browser) {
+        String browserKey = browser == null ? "" : browser.toLowerCase();
+        String remoteUrl = prop == null ? null : prop.getProperty("remote.url");
+
+        if ("chrome".equals(browserKey)) {
+            remoteUrl = resolveSetting("remote.chrome.url", remoteUrl);
+        } else if ("firefox".equals(browserKey)) {
+            remoteUrl = resolveSetting("remote.firefox.url", remoteUrl);
+        } else if ("edge".equals(browserKey)) {
+            remoteUrl = resolveSetting("remote.edge.url", remoteUrl);
+        }
+
+        if (remoteUrl == null || remoteUrl.isBlank()) {
+            throw new IllegalArgumentException("Remote browser mode is enabled but no remote URL is configured for browser: " + browser);
+        }
+
+        return remoteUrl.trim();
     }
 
     private static String resolveSetting(String key, String defaultValue) {

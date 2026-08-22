@@ -1,18 +1,20 @@
 package utils;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.interactions.Actions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.JavascriptExecutor;
 import java.time.Duration;
 import java.util.Set;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import com.aventstack.extentreports.ExtentTest;
 
 import base.BaseTest;
-import com.aventstack.extentreports.ExtentTest;
 
 public class WebDriverHelper extends Base {
 
@@ -196,6 +198,30 @@ public class WebDriverHelper extends Base {
         } catch (Exception e) {
             logging.error("Failed to hover over [" + name + "]: " + e.getMessage());
             captureFailure("Hover: " + name, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Moves to the element and clicks it in one Action chain.
+     *  Use for hover-revealed menu items that collapse if the pointer leaves the menu.
+     *  Usage: helper.hoverAndClick(FIRE_INSURANCE); */
+    public void hoverAndClick(By locator) {
+        hoverAndClick(locator, locator.toString());
+    }
+
+    /** Moves to the element and clicks it in one Action chain.
+     *  'name' appears in the report step and screenshot instead of the raw XPath/ID.
+     *  Usage: helper.hoverAndClick(FIRE_INSURANCE, "Fire Insurance"); */
+    public void hoverAndClick(By locator, String name) {
+        try {
+            waitForElementToBeVisible(locator, 5, name);
+            WebElement webElement = driver.findElement(locator);
+            new Actions(Base.getDriver()).moveToElement(webElement).click().perform();
+            logging.info("Hovered and clicked: " + name);
+            captureAction("Hovered and clicked: " + name);
+        } catch (Exception e) {
+            logging.error("Failed to hover and click [" + name + "]: " + e.getMessage());
+            captureFailure("Hover+Click: " + name, e);
             throw new RuntimeException(e);
         }
     }

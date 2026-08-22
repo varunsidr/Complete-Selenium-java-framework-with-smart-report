@@ -3,11 +3,11 @@ package Pages;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.Status;
 
+import uistore.Fire_locators;
 import utils.Base;
 import utils.LoggerHandler;
 import utils.Reporter;
 import utils.WebDriverHelper;
-import uistore.Fire_locators;
 
 public class FireHomePage extends Base {
 
@@ -19,9 +19,7 @@ public class FireHomePage extends Base {
             helper.waitForElementToBeVisible(Fire_locators.INSURANCE_PRODUCTS, WAIT_TIMEOUT);
             helper.hoverOverElement(Fire_locators.INSURANCE_PRODUCTS);
 
-            helper.waitForElementToBeVisible(Fire_locators.FIRE_INSURANCE, WAIT_TIMEOUT);
-            helper.javascriptScroll(Fire_locators.FIRE_INSURANCE);
-            helper.jsclick(Fire_locators.FIRE_INSURANCE);
+            helper.hoverAndClick(Fire_locators.FIRE_INSURANCE, "Fire Insurance");
 
             logging.info("Hovered over Insurance Products and clicked Fire Insurance");
             test.log(Status.PASS, "Hovered over Insurance Products and clicked Fire Insurance successfully");

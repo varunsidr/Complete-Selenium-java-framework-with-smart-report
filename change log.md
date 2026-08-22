@@ -1,5 +1,18 @@
 # Change Log
 
+## 2026-08-23 Fire Insurance fix
+
+- Stabilized the Fire Insurance hover flow by replacing scroll-plus-JS click with a single hover-and-click action.
+- Added a reusable hover-and-click helper to keep hover-revealed menus from collapsing during selection.
+- Confirmed the Fire Insurance test passes after the fix.
+
+## 2026-08-22 Docker support
+
+- Added remote WebDriver support to the shared driver factory.
+- Added Selenium standalone Chrome and Firefox containers through Docker Compose.
+- Added configuration values for local and remote browser execution.
+- Documented the Docker browser workflow in the README.
+
 ## 2026-08-22
 
 - Added Firefox support to the shared WebDriver factory.
