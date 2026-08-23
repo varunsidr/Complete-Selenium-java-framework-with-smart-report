@@ -13,6 +13,14 @@ The Fire Insurance flow was also stabilized by replacing the hover plus scroll s
 
 Built to be discussed in interviews: the architecture mirrors a real enterprise framework and each layer has a clear responsibility.
 
+## Quick Setup Notes
+
+- The live report hub is published through GitHub Pages.
+- In repository settings, set **Pages -> Source** to **GitHub Actions**.
+- The Pages workflow publishes the generated Extent report and the Allure output from the `v1/public` folder.
+- The CI workflow currently runs the `api` and `broken-links` groups so the stable slices can stay green while the Fire UI flow is iterated separately.
+- For the full Fire Insurance browser flow, run the test locally or against the Docker browser setup.
+
 ---
 
 ## Tech Stack
@@ -176,11 +184,18 @@ Recent UI fix: the Fire Insurance menu path now uses a stable hover-and-click he
 
 ## CI
 
-The repository includes a GitHub Actions workflow in [.github/workflows/ci.yml](.github/workflows/ci.yml) that runs the suite in a browser matrix across Chrome and Firefox with headless execution.
+The repository includes a GitHub Actions workflow in [.github/workflows/ci.yml](.github/workflows/ci.yml) that runs the suite on Chrome with headless execution.
 
 The workflow passes `browser` and `headless` as Maven system properties so the same codebase can run locally or in CI without editing `config.properties`.
 
+Current CI scope:
+
+- `api`
+- `broken-links`
+
 There is also a GitHub Pages workflow in [.github/workflows/pages.yml](.github/workflows/pages.yml) that publishes the latest Extent and Allure reports as a live report hub.
+
+If the live report shows a 404, the most common fix is to re-check **Settings -> Pages** and confirm the source is **GitHub Actions**.
 
 ## Docker
 
@@ -207,6 +222,8 @@ Stop the containers when you are done:
 ```bash
 docker compose -f docker-compose.selenium.yml down
 ```
+
+Use Docker when you want to run the Fire Insurance UI flow locally against a browser container, or when you want to mirror the remote-browser setup without installing browsers on the machine.
 
 ---
 

@@ -1,5 +1,11 @@
 # Change Log
 
+## 2026-08-23 Documentation cleanup
+
+- Added explicit GitHub Pages setup notes to the README.
+- Documented the current CI scope so it is clear that only `api` and `broken-links` run in GitHub Actions.
+- Added a short note explaining when to use Docker for the Fire Insurance UI flow.
+
 ## 2026-08-23 Workflow relocation
 
 - Moved the GitHub Actions workflows to the repository root so GitHub can detect them.
