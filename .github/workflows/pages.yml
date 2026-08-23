@@ -52,10 +52,12 @@ jobs:
       - name: Prepare Pages content
         run: |
           set -e
-          mkdir -p public/allure
+          mkdir -p public/reports public/allure
           touch public/.nojekyll
           latest_extent=$(ls -t reports/Hybrid_Framework_Report_*.html | head -n 1)
-          cp "$latest_extent" public/extent-report.html
+          latest_extent_name=$(basename "$latest_extent")
+          latest_extent_base="${latest_extent%.html}"
+          cp -R reports/. public/reports/
           cp -R target/site/allure-maven-plugin/. public/allure/
           cat > public/index.html <<'EOF'
           <!DOCTYPE html>
@@ -79,7 +81,7 @@ jobs:
               <p>Latest published reports from the Selenium Java framework.</p>
               <div class="card">
                 <h2>Extent Report</h2>
-                <p><a href="extent-report.html">Open the latest Extent HTML report</a></p>
+                <p><a href="reports/${latest_extent_name}">Open the latest Extent HTML report</a></p>
               </div>
               <div class="card">
                 <h2>Allure Report</h2>
