@@ -3,11 +3,11 @@ package Pages;
 import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.Status;
 
+import uistore.Fire_locators;
 import utils.Base;
 import utils.LoggerHandler;
 import utils.Reporter;
 import utils.WebDriverHelper;
-import uistore.Fire_locators;
 
 public class FireUserDetails extends Base {
 
@@ -36,6 +36,7 @@ public class FireUserDetails extends Base {
         try {
             helper.waitForElementToBeVisible(Fire_locators.SHOP_BUSINESS_TYPE, WAIT_TIMEOUT);
             helper.clickingOnElement(Fire_locators.SHOP_BUSINESS_TYPE);
+            helper.waitForElementToBeVisible(Fire_locators.SHOP_PLAN_HEADING, WAIT_TIMEOUT, "Shop plan page heading");
 
             logging.info("Selected business type as Shops");
             test.log(Status.PASS, "Selected business type as Shops successfully");
