@@ -20,6 +20,8 @@ public class FireHomePage extends Base {
             helper.hoverOverElement(Fire_locators.INSURANCE_PRODUCTS);
 
             helper.hoverAndClick(Fire_locators.FIRE_INSURANCE, "Fire Insurance");
+            helper.waitForUrlToContain("/commercial-insurance/fire-insurance/", WAIT_TIMEOUT);
+            helper.waitForElementToBeVisible(Fire_locators.MOBILE_FIELD, WAIT_TIMEOUT, "Fire Insurance mobile field");
 
             logging.info("Hovered over Insurance Products and clicked Fire Insurance");
             test.log(Status.PASS, "Hovered over Insurance Products and clicked Fire Insurance successfully");
