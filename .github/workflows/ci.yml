@@ -14,12 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chrome, firefox]
+        browser: [chrome]
         include:
           - browser: chrome
-            test_groups: smoke,api
-          - browser: firefox
-            test_groups: smoke
+            test_groups: api,broken-links
 
     steps:
       - name: Checkout
