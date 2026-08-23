@@ -11,12 +11,14 @@ import utils.WebDriverHelper;
 
 public class FireUserDetails extends Base {
 
+    private static final int FIRE_FLOW_TIMEOUT_SECONDS = 20;
+
     WebDriverHelper helper = new WebDriverHelper();
     LoggerHandler logging = new LoggerHandler();
 
     public void enterMobileNumber(String number, ExtentTest test) {
         try {
-            helper.waitForElementToBeVisible(Fire_locators.MOBILE_FIELD, WAIT_TIMEOUT);
+            helper.waitForElementToBeVisible(Fire_locators.MOBILE_FIELD, FIRE_FLOW_TIMEOUT_SECONDS);
             helper.sendKeys(Fire_locators.MOBILE_FIELD, number);
 
             logging.info("Entered mobile number: " + number);
@@ -34,9 +36,11 @@ public class FireUserDetails extends Base {
 
     public void selectBusinessTypeAsShop(ExtentTest test) {
         try {
-            helper.waitForElementToBeVisible(Fire_locators.SHOP_BUSINESS_TYPE, WAIT_TIMEOUT);
-            helper.clickingOnElement(Fire_locators.SHOP_BUSINESS_TYPE);
-            helper.waitForElementToBeVisible(Fire_locators.SHOP_PLAN_HEADING, WAIT_TIMEOUT, "Shop plan page heading");
+            helper.waitForElementToBeVisible(Fire_locators.SHOP_BUSINESS_TYPE, FIRE_FLOW_TIMEOUT_SECONDS);
+            helper.javascriptScroll(Fire_locators.SHOP_BUSINESS_TYPE, "Shops business type");
+            helper.jsclick(Fire_locators.SHOP_BUSINESS_TYPE, "Shops business type");
+            helper.waitForUrlToContain("showPackagePolicy=1", FIRE_FLOW_TIMEOUT_SECONDS);
+            helper.waitForElementToBeVisible(Fire_locators.SHOP_PLAN_HEADING, FIRE_FLOW_TIMEOUT_SECONDS, "Shop plan page heading");
 
             logging.info("Selected business type as Shops");
             test.log(Status.PASS, "Selected business type as Shops successfully");
@@ -53,8 +57,9 @@ public class FireUserDetails extends Base {
 
     public void checkPlansFor20Lakhs(ExtentTest test) {
         try {
-            helper.waitForElementToBeVisible(Fire_locators.TWENTY_LAKHS_PLAN, WAIT_TIMEOUT);
-            helper.clickingOnElement(Fire_locators.TWENTY_LAKHS_PLAN);
+            helper.waitForElementToBeVisible(Fire_locators.TWENTY_LAKHS_PLAN, FIRE_FLOW_TIMEOUT_SECONDS);
+            helper.javascriptScroll(Fire_locators.TWENTY_LAKHS_PLAN, "20 Lakhs plan");
+            helper.jsclick(Fire_locators.TWENTY_LAKHS_PLAN, "20 Lakhs plan");
 
             logging.info("Selected 20 Lakhs plan");
             test.log(Status.PASS, "Selected 20 Lakhs plan successfully");
