@@ -513,6 +513,119 @@ public class WebDriverHelper extends Base {
         }
     }
 
+    /** Opens the provided URL and waits for the page to finish loading.
+     *  Use for direct navigation or post-login redirection flows.
+     *  Usage: helper.openUrl("https://example.com"); */
+    public void openUrl(String url) {
+        try {
+            driver.get(url);
+            waitForPageToLoad(15);
+            logging.info("Opened URL: " + url);
+            captureAction("Opened URL: " + url);
+        } catch (Exception e) {
+            logging.error("Failed to open URL [" + url + "]: " + e.getMessage());
+            captureFailure("Open URL: " + url, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Waits until the browser reports document.readyState === 'complete'.
+     *  Useful after navigation, form submissions, or dynamic page loads.
+     *  Usage: helper.waitForPageToLoad(15); */
+    public void waitForPageToLoad(int timeoutInSeconds) {
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(timeoutInSeconds))
+                    .until(webDriver -> ((JavascriptExecutor) webDriver)
+                            .executeScript("return document.readyState").equals("complete"));
+            logging.info("Page load complete");
+        } catch (Exception e) {
+            logging.error("Page did not finish loading within " + timeoutInSeconds + "s: " + e.getMessage());
+            captureFailure("Wait page load", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Returns the current browser URL as a String. */
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
+    }
+
+    /** Refreshes the current page. */
+    public void refreshPage() {
+        driver.navigate().refresh();
+        waitForPageToLoad(10);
+        logging.info("Page refreshed");
+    }
+
+    /** Checks whether an element is visible within 3 seconds. */
+    public boolean isElementDisplayed(By locator) {
+        try {
+            return new WebDriverWait(driver, Duration.ofSeconds(3))
+                    .until(ExpectedConditions.visibilityOfElementLocated(locator)) != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Clears a text field using Ctrl+A + Backspace and logs the action. */
+    public void clearField(By locator) {
+        clearField(locator, locator.toString());
+    }
+
+    /** Clears a text field using Ctrl+A + Backspace and logs the action. */
+    public void clearField(By locator, String name) {
+        try {
+            waitForElementToBeVisible(locator, 5, name);
+            WebElement webElement = driver.findElement(locator);
+            webElement.sendKeys(Keys.CONTROL + "a");
+            webElement.sendKeys(Keys.DELETE);
+            logging.info("Cleared field: " + name);
+            captureAction("Cleared field: " + name);
+        } catch (Exception e) {
+            logging.error("Failed to clear field [" + name + "]: " + e.getMessage());
+            captureFailure("Clear field: " + name, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Selects a native dropdown option by its index position. */
+    public void selectDropdownByIndex(By locator, int index) {
+        selectDropdownByIndex(locator, index, locator.toString());
+    }
+
+    /** Selects a native dropdown option by its index position. */
+    public void selectDropdownByIndex(By locator, int index, String name) {
+        try {
+            waitForElementToBeVisible(locator, 5, name);
+            new Select(driver.findElement(locator)).selectByIndex(index);
+            logging.info("Selected index [" + index + "] in dropdown: " + name);
+            captureAction("Selected index [" + index + "] in: " + name);
+        } catch (Exception e) {
+            logging.error("Failed to select index [" + index + "] in [" + name + "]: " + e.getMessage());
+            captureFailure("Select dropdown index: " + name, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Switches the driver context to the given iframe element. */
+    public void switchToFrame(By locator) {
+        try {
+            WebElement frame = driver.findElement(locator);
+            driver.switchTo().frame(frame);
+            logging.info("Switched to iframe: " + locator);
+        } catch (Exception e) {
+            logging.error("Failed to switch to iframe [" + locator + "]: " + e.getMessage());
+            captureFailure("Switch to frame: " + locator, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Returns the driver to the default content (top-level browsing context). */
+    public void switchToDefaultContent() {
+        driver.switchTo().defaultContent();
+        logging.info("Switched to default content");
+    }
+
     /** Iterates all open window handles and switches the driver to the last one found.
      *  Use after clicking a link that opens a new tab or pop-up window.
      *  Usage: helper.switchToNewWindow(); */
